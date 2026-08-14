@@ -11,6 +11,23 @@ through an explicit, visible collaboration conversation, share read-only version
 it, and keep a record of every run. The app runs on Cloudflare Workers with D1 as its
 persistent store and uses a Vinext (React + Vite) frontend.
 
+## Table of Contents
+
+- [Authors & Maintainers](#authors--maintainers)
+- [Features](#features)
+- [Architecture](#architecture)
+- [Task attachments](#task-attachments)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Environment Variables](#environment-variables)
+- [Scripts](#scripts)
+- [Deploy to the Owner's Cloudflare Account](#deploy-to-the-owners-cloudflare-account)
+- [One-click Local Launch](#one-click-local-launch)
+- [Included Shape](#included-shape)
+- [Workspace Auth Headers](#workspace-auth-headers)
+- [Optional Dispatch-Owned ChatGPT Sign-In](#optional-dispatch-owned-chatgpt-sign-in)
+- [Learn More](#learn-more)
+
 ## Authors & Maintainers
 
 - **Taxueovo** — core maintainer and primary developer.
@@ -42,20 +59,24 @@ persistent store and uses a Vinext (React + Vite) frontend.
 
 ## Architecture
 
-```
-┌────────────────────────────┐        ┌──────────────────────────────┐
-│ Leader console (browser)   │        │ Deployed Cloudflare worker   │
-│  app/  React + Vinext      │        │  worker/  API + D1 database  │
-└────────────┬───────────────┘        └──────────────┬───────────────┘
-             │ local dev only                        │ public
-             ▼                                       ▼
-      ┌──────────────┐                        ┌──────────────┐
-      │ vite.config.ts dev plugins           │ lib/llm.ts   │
-      │  /llm-proxy   (LLM relay)            │ Responses API│
-      │  /share-api   (sharing relay)        │ with Chat    │
-      │               via local Node proxy   │ Completions  │
-      └──────────────┘                       │ fallback     │
-                                             └──────────────┘
+```mermaid
+flowchart LR
+    subgraph Browser["Leader console (browser)"]
+        ui["app/ — React + Vinext"]
+    end
+
+    subgraph Dev["Local development (Node)"]
+        proxy["vite.config.ts dev plugins<br/>/llm-proxy (LLM relay) · /share-api (sharing relay)"]
+    end
+
+    subgraph Cloud["Deployed Cloudflare worker"]
+        api["worker/ — API + D1 database"]
+        llm["lib/llm.ts<br/>Responses API with Chat Completions fallback"]
+    end
+
+    ui -- "local dev only" --> proxy
+    proxy -- "LLM & share requests" --> api
+    api --> llm
 ```
 
 - **`lib/team-orchestrator.ts`** — client-side conversation orchestrator. Drives the

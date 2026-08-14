@@ -1,2 +1,14 @@
-*.bat text eol=crlf
-*.ps1 text eol=crlf
+# Normalize line endings to LF in the repository (checked out as-is on Windows)
+* text=auto
+
+# Binary files must not be normalized or diffed as text
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+
+# Lockfiles are generated; mark as binary-merge safe
+package-lock.json -merge
+pnpm-lock.yaml -merge
