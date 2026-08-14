@@ -70,7 +70,7 @@ export default function Home() {
     if (savedUserName?.trim()) queueMicrotask(() => setUserName(savedUserName));
     try {
       const links = JSON.parse(window.localStorage.getItem("arbor-managed-links") ?? "[]") as ManagedLink[];
-      if (Array.isArray(links)) { setManagedLinks(links); setShareInfo(links[0] ?? null); }
+      if (Array.isArray(links)) queueMicrotask(() => { setManagedLinks(links); setShareInfo(links[0] ?? null); });
     } catch { window.localStorage.removeItem("arbor-managed-links"); }
     const saved = window.localStorage.getItem("arbor-team");
     if (!saved) return;
@@ -242,9 +242,8 @@ function ManagementModal({ links, close, onDelete }: { links: ManagedLink[]; clo
   }
 
   async function loadDetail() {
-    setData(null);
+    queueMicrotask(() => { setData(null); setLoading(true); setError(""); });
     if (!selectedId) return;
-    setLoading(true); setError("");
     try {
       const body = await manageCall("list");
       if (!body.team) throw new Error(body.error ?? "Unable to read run logs");
