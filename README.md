@@ -14,7 +14,6 @@ persistent store and uses a Vinext (React + Vite) frontend.
 ## Authors & Maintainers
 
 - **Taxueovo** — core maintainer and primary developer.
-- **Melanie-Fan** — documentation and design.
 
 ## Features
 
