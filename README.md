@@ -4,11 +4,17 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-black)](https://react.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Maintainer](https://img.shields.io/badge/maintainer-Taxueovo-blue)](https://github.com/Taxueovo)
 
 A multi-agent application that lets you build a custom Planner–Worker team, run it
 through an explicit, visible collaboration conversation, share read-only versions of
 it, and keep a record of every run. The app runs on Cloudflare Workers with D1 as its
 persistent store and uses a Vinext (React + Vite) frontend.
+
+## Authors & Maintainers
+
+- **Taxueovo** — core maintainer and primary developer.
+- **Melanie-Fan** — documentation and design.
 
 ## Features
 
