@@ -3,7 +3,7 @@
 import { use, useMemo, useRef, useState } from "react";
 import { AttachmentPicker, useVisionCapability } from "@/app/attachment-picker";
 import { runTeamConversation, type AgentActivity, type RunStage, type TeamTurn } from "@/lib/team-orchestrator";
-import { attachmentSummary, type TaskAttachment } from "@/lib/task-attachments";
+import type { TaskAttachment } from "@/lib/task-attachments";
 
 type Agent = { id: string; name: string; role: string; avatar: string; color: string; responsibility: string };
 type Team = { teamName: string; architecture: string; agents: Agent[] };
@@ -12,6 +12,7 @@ type Message = { agent: Agent | null; text: string; result?: boolean; user?: boo
 export default function SharedTeamPage({ params }: { params: Promise<{ id: string }> }) {
   const { id: teamId } = use(params);
   const [accessCode, setAccessCode] = useState("");
+  const [runToken, setRunToken] = useState("");
   const [team, setTeam] = useState<Team | null>(null);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,9 +36,9 @@ export default function SharedTeamPage({ params }: { params: Promise<{ id: strin
     setLoading(true); setError("");
     try {
       const response = await fetch("/api/access", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ teamId, accessCode }) });
-      const body = await response.json() as { team?: Team; error?: string };
-      if (!response.ok || !body.team) { setError(body.error ?? "Unable to open the team"); return; }
-      setTeam(body.team);
+      const body = await response.json() as { team?: Team; runToken?: string; error?: string };
+      if (!response.ok || !body.team || !body.runToken) { setError(body.error ?? "Unable to open the team"); return; }
+      setRunToken(body.runToken); setAccessCode(""); setTeam(body.team);
     } catch { setError("Network connection failed; please try again later"); } finally { setLoading(false); }
   }
 
@@ -56,9 +57,7 @@ export default function SharedTeamPage({ params }: { params: Promise<{ id: strin
     if (!continued) { messagesRef.current = []; setMessages([]); }
     setRunError(""); setAgentActivity({}); setRunStage("planning"); setRunning(true);
     try {
-      const fileNames = attachmentSummary(attachments);
-      const loggedTask = fileNames ? `${effectiveTask}\nAttachments: ${fileNames}` : effectiveTask;
-      const logResponse = await fetch("/api/usage", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ teamId, accessCode, task: loggedTask }) });
+      const logResponse = await fetch("/api/usage", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${runToken}` }, body: JSON.stringify({ teamId }) });
       if (!logResponse.ok) {
         const logBody = await logResponse.json().catch(() => null) as { error?: string } | null;
         throw new Error(logBody?.error ?? "This share link is currently unavailable");
@@ -69,7 +68,7 @@ export default function SharedTeamPage({ params }: { params: Promise<{ id: strin
         setRunStage,
         appendTurn,
         (activity) => setAgentActivity((current) => ({ ...current, [activity.agentId]: activity })),
-        { initialTranscript, takeInterventions, continued, attachments, visionEnabled },
+        { initialTranscript, takeInterventions, continued, attachments, visionEnabled, authorization: { teamId, token: runToken } },
       );
     } catch (error) { setRunError(error instanceof Error ? error.message : "Team run failed"); } finally { runLock.current = false; setRunning(false); }
   }
@@ -80,7 +79,7 @@ export default function SharedTeamPage({ params }: { params: Promise<{ id: strin
     appendTurn(turn); setConversationInput("");
     if (running) {
       interventionQueue.current.push(turn);
-      void fetch("/api/usage", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ teamId, accessCode, task: `Mid-discussion addition: ${text}` }) });
+      void fetch("/api/usage", { method: "POST", headers: { "content-type": "application/json", authorization: `Bearer ${runToken}` }, body: JSON.stringify({ teamId }) });
     } else void runTeam(text, true);
   }
 

@@ -11,10 +11,14 @@
     "build": "node scripts/run-vinext.mjs build",
     "start": "node scripts/run-vinext.mjs start",
     "deploy:cloudflare": "vinext build && wrangler deploy --config wrangler.deploy.jsonc",
-    "db:migrate:cloudflare": "wrangler d1 migrations apply arbor-agent-team-db --remote --config wrangler.deploy.jsonc",
-    "test": "npm run build && node --test tests/rendered-html.test.mjs",
+    "db:migrate:cloudflare": "wrangler d1 migrations apply sharable-agent-crew-db --remote --config wrangler.deploy.jsonc",
+    "test": "pnpm run build && node --test tests/*.test.mjs",
+    "security:scan": "node scripts/scan-secrets.mjs",
+    "release:audit": "node scripts/release-audit.mjs",
+    "release:check": "pnpm release:audit && pnpm security:scan && pnpm lint && pnpm exec tsc --noEmit && pnpm test && pnpm test:d1",
     "lint": "eslint . --ignore-pattern dist --ignore-pattern .next",
-    "db:generate": "drizzle-kit generate"
+    "db:generate": "drizzle-kit generate",
+    "test:d1": "wrangler d1 migrations apply sharable-agent-crew-db --local --persist-to .wrangler/test-state --config wrangler.deploy.example.jsonc"
   },
   "dependencies": {
     "drizzle-orm": "0.45.2",

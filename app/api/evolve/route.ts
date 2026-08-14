@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { requestLLM } from "@/lib/llm";
+import { errorResponse, isLocalDevelopmentRequest, readJsonLimited } from "@/lib/security";
 
 type Agent = { id: string; name: string; role: string; responsibility: string };
 type Turn = { agentId: string; text: string; type?: string };
@@ -7,8 +8,9 @@ type EvolutionSuggestion = { agentId: string; reason: string; proposedResponsibi
 
 export async function POST(request: Request) {
   try {
-    const payload = (await request.json()) as { task?: string; agents?: Agent[]; transcript?: Turn[] };
-    const agents = payload.agents ?? [];
+    if (!isLocalDevelopmentRequest(request)) return Response.json({ error: "Evolution review is available only in the local owner console" }, { status: 403 });
+    const payload = await readJsonLimited<{ task?: string; agents?: Agent[]; transcript?: Turn[] }>(request, 512_000);
+    const agents = (payload.agents ?? []).slice(0, 12);
     const transcript = (payload.transcript ?? []).slice(-40);
     if (!payload.task?.trim() || agents.length === 0 || transcript.length === 0) {
       return Response.json({ error: "A team conversation is required for review" }, { status: 400 });
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
       summary: typeof parsed.summary === "string" ? parsed.summary.trim().slice(0, 300) : "Review completed for this round",
       suggestions,
     });
-  } catch {
-    return Response.json({ error: "Unable to generate evolution suggestions right now" }, { status: 502 });
+  } catch (error) {
+    return errorResponse(error, "Unable to generate evolution suggestions right now");
   }
 }

@@ -15,6 +15,20 @@
       "when": 1786328501812,
       "tag": "0001_shocking_ravenous",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1786703691557,
+      "tag": "0002_lumpy_cerebro",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1786705675922,
+      "tag": "0003_third_the_spike",
+      "breakpoints": true
     }
   ]
 }

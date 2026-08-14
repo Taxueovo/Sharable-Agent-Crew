@@ -1,4 +1,5 @@
 import { requestLLM } from "@/lib/llm";
+import { errorResponse, isLocalDevelopmentRequest, readJsonLimited } from "@/lib/security";
 
 type Agent = { id: string; name: string; role: string; responsibility: string };
 type AgentMessage = { agentId: string; text: string; type: "handoff" | "result" };
@@ -10,7 +11,13 @@ async function askModel(instructions: string, input: string, maxOutputTokens: nu
 }
 
 export async function POST(request: Request) {
-  const payload = (await request.json()) as { task?: string; agents?: Agent[] };
+  if (!isLocalDevelopmentRequest(request)) return Response.json({ error: "Legacy streaming runs are available only in local development" }, { status: 403 });
+  let payload: { task?: string; agents?: Agent[] };
+  try {
+    payload = await readJsonLimited<{ task?: string; agents?: Agent[] }>(request, 256_000);
+  } catch (error) {
+    return errorResponse(error, "Unable to read the run request");
+  }
   const task = payload.task?.trim();
   const agents = payload.agents ?? [];
   const planner = agents.find((agent) => agent.role === "Planner") ?? agents[0];

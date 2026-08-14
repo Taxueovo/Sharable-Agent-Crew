@@ -1,8 +1,7 @@
 import os from "node:os";
 import path from "node:path";
 import vinext from "vinext";
-import { defineConfig, type Plugin } from "vite";
-import { PUBLIC_BASE_URL } from "./lib/public-worker";
+import { defineConfig, loadEnv, type Plugin } from "vite";
 import { sites } from "./build/sites-vite-plugin";
 
 // Development only: workerd's worker fetch does not support HTTP proxies (direct
@@ -12,7 +11,7 @@ import { sites } from "./build/sites-vite-plugin";
 // process runs with --use-env-proxy, going through HTTP_PROXY/HTTPS_PROXY), and returns
 // the response unchanged. Not enabled in production (Cloudflare), where the worker
 // connects to the gateway directly.
-function llmDevProxyPlugin(): Plugin {
+function llmDevProxyPlugin(allowedBaseUrl: string): Plugin {
   return {
     name: "llm-dev-proxy",
     apply: "serve",
@@ -20,8 +19,14 @@ function llmDevProxyPlugin(): Plugin {
       server.middlewares.use(async (req, res, next) => {
         if (req.method !== "POST" || !req.url?.startsWith("/llm-proxy")) return next();
         try {
-          let body = "";
-          for await (const chunk of req) body += chunk;
+          const chunks: Uint8Array[] = [];
+          let size = 0;
+          for await (const chunk of req) {
+            size += chunk.length;
+            if (size > 8_000_000) throw new Error("request too large");
+            chunks.push(Buffer.from(chunk));
+          }
+          const body = Buffer.concat(chunks).toString("utf8");
           const { targetUrl, body: payload, headers } = JSON.parse(body || "{}") as {
             targetUrl?: unknown;
             body?: unknown;
@@ -32,10 +37,23 @@ function llmDevProxyPlugin(): Plugin {
             res.end("bad request");
             return;
           }
+          const target = new URL(targetUrl);
+          const base = new URL(allowedBaseUrl.replace(/\/$/, "") + "/");
+          const basePath = base.pathname.replace(/\/$/, "");
+          const allowedPaths = new Set([`${basePath}/responses`, `${basePath}/chat/completions`]);
+          if (target.origin !== base.origin || !allowedPaths.has(target.pathname) || target.search || target.username || target.password) {
+            res.statusCode = 403;
+            res.end("target not allowed");
+            return;
+          }
+          const authorization = typeof headers?.authorization === "string" && headers.authorization.startsWith("Bearer ") && headers.authorization.length <= 4_096
+            ? headers.authorization
+            : undefined;
           const upstream = await fetch(targetUrl, {
             method: "POST",
-            headers: { "content-type": "application/json", ...(headers ?? {}) },
+            headers: { "content-type": "application/json", ...(authorization ? { authorization } : {}) },
             body: JSON.stringify(payload),
+            signal: AbortSignal.timeout(90_000),
           });
           res.statusCode = upstream.status;
           const upstreamContentType = upstream.headers.get("content-type");
@@ -60,7 +78,9 @@ function llmDevProxyPlugin(): Plugin {
 // with --use-env-proxy, going through HTTP_PROXY/HTTPS_PROXY — the same proven egress
 // path as llm-dev-proxy. Not enabled in production (Cloudflare); worker endpoints
 // are unchanged.
-function shareApiProxyPlugin(): Plugin {
+const shareRelayPaths = new Set(["/api/teams", "/api/manage"]);
+
+function shareApiProxyPlugin(publishToken: string, publicBaseUrl: string): Plugin {
   return {
     name: "share-api-proxy",
     apply: "serve",
@@ -68,17 +88,33 @@ function shareApiProxyPlugin(): Plugin {
       server.middlewares.use(async (req, res, next) => {
         if (req.method !== "POST" || !req.url?.startsWith("/share-api")) return next();
         try {
+          const relayPath = req.url.slice("/share-api".length);
+          if (!shareRelayPaths.has(relayPath)) {
+            res.statusCode = 404;
+            res.end("not found");
+            return;
+          }
           // Decode UTF-8 in one shot with Buffer.concat: per-chunk toString would
           // corrupt multi-byte characters that got split across TCP segments.
           const chunks: Uint8Array[] = [];
-          for await (const chunk of req) chunks.push(Buffer.from(chunk));
+          let size = 0;
+          for await (const chunk of req) {
+            size += chunk.length;
+            if (size > 128_000) throw new Error("request too large");
+            chunks.push(Buffer.from(chunk));
+          }
           const body = Buffer.concat(chunks).toString("utf8");
           // Strip the /share-api prefix and forward to the worker's same-named API route
           // (slice keeps the query string).
-          const upstream = await fetch(PUBLIC_BASE_URL + req.url.slice("/share-api".length), {
+          if (!publicBaseUrl) throw new Error("PUBLIC_BASE_URL is required for publishing from the local console");
+          const upstream = await fetch(publicBaseUrl.replace(/\/$/, "") + relayPath, {
             method: "POST",
-            headers: { "content-type": req.headers["content-type"] ?? "application/json" },
+            headers: {
+              "content-type": req.headers["content-type"] ?? "application/json",
+              ...(publishToken ? { "x-arbor-publish-token": publishToken } : {}),
+            },
             body,
+            signal: AbortSignal.timeout(30_000),
           });
           res.statusCode = upstream.status;
           const upstreamContentType = upstream.headers.get("content-type");
@@ -146,7 +182,11 @@ const localBindingConfig = {
   },
 };
 
-export default defineConfig(async () => {
+export default defineConfig(async ({ mode }) => {
+  const fileEnv = loadEnv(mode, process.cwd(), "");
+  const openaiBaseUrl = process.env.OPENAI_BASE_URL || fileEnv.OPENAI_BASE_URL || "https://api.openai.com/v1";
+  const publishToken = process.env.PUBLISH_TOKEN || fileEnv.PUBLISH_TOKEN || "";
+  const publicBaseUrl = process.env.PUBLIC_BASE_URL || fileEnv.PUBLIC_BASE_URL || "";
   // Keep Wrangler and Miniflare state project-local. These are non-secret tool
   // settings; application environment belongs in ignored `.env*` files.
   // On a network drive the share rejects writes, so move state to the local temp dir.
@@ -172,8 +212,8 @@ export default defineConfig(async () => {
     // share. Keep the default cache location.
     cacheDir: undefined,
     plugins: [
-      llmDevProxyPlugin(),
-      shareApiProxyPlugin(),
+      llmDevProxyPlugin(openaiBaseUrl),
+      shareApiProxyPlugin(publishToken, publicBaseUrl),
       vinext(),
       sites(),
       cloudflare({

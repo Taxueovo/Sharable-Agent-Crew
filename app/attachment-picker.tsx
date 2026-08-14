@@ -38,7 +38,7 @@ async function prepareAttachment(file: File): Promise<TaskAttachment> {
   const kind = kindOf(file);
   if (!kind) throw new Error(`Unsupported format for "${file.name}"`);
   if (file.size > attachmentLimits.maxFileBytes) throw new Error(`"${file.name}" exceeds 10 MB`);
-  if (kind === "image" && file.size > attachmentLimits.maxImageBytes) throw new Error(`Image "${file.name}" exceeds 5 MB`);
+  if (kind === "image" && file.size > attachmentLimits.maxImageBytes) throw new Error(`Image "${file.name}" exceeds 1.8 MB`);
 
   const base = {
     id: `${Date.now()}-${crypto.randomUUID()}`,
@@ -113,6 +113,12 @@ export function AttachmentPicker({ attachments, setAttachments, disabled = false
       setError("Total attachment size for this task cannot exceed 20 MB");
       return;
     }
+    const existingImageBytes = attachments.filter((item) => item.kind === "image").reduce((total, item) => total + item.size, 0);
+    const selectedImageBytes = selected.filter((file) => kindOf(file) === "image").reduce((total, file) => total + file.size, 0);
+    if (existingImageBytes + selectedImageBytes > attachmentLimits.maxTotalImageBytes) {
+      setError("Total image size for this task cannot exceed 3.5 MB");
+      return;
+    }
     setProcessing(true);
     const next = [...attachments];
     const errors: string[] = [];
@@ -133,7 +139,7 @@ export function AttachmentPicker({ attachments, setAttachments, disabled = false
         <span>+</span>{processing ? "Reading files…" : "Add attachments"}
       </button>
       <input ref={inputRef} className="visually-hidden" type="file" multiple disabled={disabled || processing} accept={supportedExtensions.map((extension) => `.${extension}`).join(",")} onChange={selectFiles} />
-      <span className="attachment-help">Word, Excel, CSV, TXT, PNG, JPG, etc. · up to 6 files</span>
+      <span className="attachment-help">Word, Excel, CSV, TXT, PNG, JPG, etc. · up to 4 files</span>
     </div>
     {error && <div className="attachment-error" role="alert">{error}</div>}
     {attachments.length > 0 && <div className="attachment-list">

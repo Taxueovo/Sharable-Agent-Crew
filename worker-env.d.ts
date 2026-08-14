@@ -27,6 +27,13 @@ declare global {
       OPENAI_MODEL: string;
       OPENAI_VISION_ENABLED: string;
       ADMIN_TOKEN: string;
+      PUBLISH_TOKEN: string;
+      RUN_SESSION_SECRET: string;
+      RUN_SESSION_SECRET_PREVIOUS: string;
+      RUN_SESSION_SECRET_ID: string;
+      MAX_TEAM_RUNS_PER_MONTH: string;
+      MAX_TEAM_OUTPUT_TOKENS_PER_DAY: string;
+      REQUIRE_AUTHENTICATED_PUBLISHER: string;
 
       // Local development only (injected by vite.config.ts, guarded by ARBOR_LOCAL_DEV=1)
       OPENAI_DEV_PROXY_URL: string;

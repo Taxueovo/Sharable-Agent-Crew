@@ -1,0 +1,1 @@
+ALTER TABLE `shared_teams` ADD `owner_user_hash` text;

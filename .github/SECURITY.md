@@ -10,7 +10,7 @@
 ## Reporting a Vulnerability
 
 Please report security issues privately through
-[GitHub Security Advisories](https://github.com/Taxueovo/Arbor-Agent-Team/security/advisories/new)
+[GitHub Security Advisories](https://github.com/Taxueovo/Sharable-Agent-Crew/security/advisories/new)
 ("Report a vulnerability") rather than opening a public issue.
 
 When reporting, include:

@@ -32,6 +32,24 @@ type Style = "responses" | "chat";
 
 // Cached protocol-detection result; reused across requests within the same worker isolate.
 let styleCache: Style | undefined;
+let consecutiveUpstreamFailures = 0;
+let circuitOpenUntil = 0;
+
+function assertCircuitClosed() {
+  if (Date.now() < circuitOpenUntil) throw new Error("MODEL_CIRCUIT_OPEN");
+}
+
+function recordSuccess() {
+  consecutiveUpstreamFailures = 0;
+  circuitOpenUntil = 0;
+}
+
+function recordFailure(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  if (!/MODEL_ERROR: (429|5\d\d)|timeout|fetch failed|network/i.test(message)) return;
+  consecutiveUpstreamFailures += 1;
+  if (consecutiveUpstreamFailures >= 5) circuitOpenUntil = Date.now() + 60_000;
+}
 
 function messageText(payload: ModelPayload) {
   const responsesText = payload.output
@@ -80,9 +98,10 @@ async function forward(
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ targetUrl, body, headers }),
+      signal: AbortSignal.timeout(90_000),
     });
   }
-  return await fetch(targetUrl, { method: "POST", headers, body: JSON.stringify(body) });
+  return await fetch(targetUrl, { method: "POST", headers, body: JSON.stringify(body), signal: AbortSignal.timeout(90_000) });
 }
 
 async function responsesCall(baseUrl: string, apiKey: string, model: string, request: LlmRequest) {
@@ -135,30 +154,35 @@ async function chatCall(baseUrl: string, apiKey: string, model: string, request:
 }
 
 export async function requestLLM(request: LlmRequest) {
+  assertCircuitClosed();
   const apiKey = env.OPENAI_API_KEY;
   if (!apiKey) throw new Error("LLM_NOT_CONFIGURED");
   const baseUrl = (env.OPENAI_BASE_URL || "https://api.openai.com/v1").replace(/\/$/, "");
   const model = env.OPENAI_MODEL || "gpt-5.6-luna";
 
-  if (styleCache === "chat") return await chatCall(baseUrl, apiKey, model, request);
-  if (styleCache === "responses") {
-    const result = await responsesCall(baseUrl, apiKey, model, request);
-    if (!result.ok) throw new Error(`MODEL_ERROR: ${result.status} ${result.detail}`);
-    if (!result.raw) throw new Error("Model returned no usable content");
-    return result.raw;
+  try {
+    let raw: string;
+    if (styleCache === "chat") raw = await chatCall(baseUrl, apiKey, model, request);
+    else if (styleCache === "responses") {
+      const result = await responsesCall(baseUrl, apiKey, model, request);
+      if (!result.ok) throw new Error(`MODEL_ERROR: ${result.status} ${result.detail}`);
+      if (!result.raw) throw new Error("Model returned no usable content");
+      raw = result.raw;
+    } else {
+      const first = await responsesCall(baseUrl, apiKey, model, request);
+      if (first.ok) {
+        styleCache = "responses";
+        if (!first.raw) throw new Error("Model returned no usable content");
+        raw = first.raw;
+      } else if (first.status === 404) {
+        styleCache = "chat";
+        raw = await chatCall(baseUrl, apiKey, model, request);
+      } else throw new Error(`MODEL_ERROR: ${first.status} ${first.detail}`);
+    }
+    recordSuccess();
+    return raw;
+  } catch (error) {
+    recordFailure(error);
+    throw error;
   }
-
-  // First call: try Responses; a 404 means the gateway only supports Chat Completions,
-  // so switch and cache the choice.
-  const first = await responsesCall(baseUrl, apiKey, model, request);
-  if (first.ok) {
-    styleCache = "responses";
-    if (!first.raw) throw new Error("Model returned no usable content");
-    return first.raw;
-  }
-  if (first.status === 404) {
-    styleCache = "chat";
-    return await chatCall(baseUrl, apiKey, model, request);
-  }
-  throw new Error(`MODEL_ERROR: ${first.status} ${first.detail}`);
 }

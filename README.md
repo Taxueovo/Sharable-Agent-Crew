@@ -82,15 +82,15 @@ flowchart LR
     api --> llm
 ```
 
-- **`lib/team-orchestrator.ts`** — client-side conversation orchestrator. Drives the
-  Planner/Worker turns through the phases (`planning` → `working` → `discussing` →
-  `summarizing`), handles user interventions (replan), and reports live agent activity.
+- **`app/api/conversation/route.ts`** — server-side conversation orchestrator. It
+  owns phase order, actor selection, review and summarization, and streams only
+  structured progress events to the browser. The browser cannot manufacture turns.
 - **`lib/llm.ts`** — unified LLM call wrapper. Prefers the OpenAI Responses API
   (`/responses`); if the gateway returns 404 it automatically falls back to Chat
   Completions (`/chat/completions`) and caches the choice per worker isolate.
-- **`lib/public-worker.ts`** — the single place that names the deployed public worker
-  (`PUBLIC_BASE_URL`). Dependency-free constants module, imported from both Node and
-  browser contexts.
+- **`PUBLIC_BASE_URL` in `vite.config.ts`** — used only by the development-time Node
+  publishing relay. The deployed origin and `PUBLISH_TOKEN` are never bundled into
+  browser code.
 - **`vite.config.ts`** — two development-only plugins:
   - `llm-dev-proxy` — relays LLM requests from workerd (which cannot use an HTTP proxy)
     through a local Node endpoint that goes out via `HTTP_PROXY`/`HTTPS_PROXY`.
@@ -109,11 +109,13 @@ flowchart LR
 - Supported types: Word (`.docx`), Excel (`.xlsx` / `.xls`), CSV, TXT, Markdown, JSON,
   PNG, JPG, and WebP.
 - Document and spreadsheet text is extracted in the browser and passed to the agents;
-  it is never written into a published team template.
+  it is never written into a published team template or D1, but it is sent to the
+  configured model provider while the task is running.
 - Images keep their preview and original data and are passed to the agents as
   multimodal input by default. Set `OPENAI_VISION_ENABLED=false` only when using a
   text-only model.
-- Limits per task: up to 6 attachments, 10 MB per file, 5 MB per image, 20 MB total.
+- Limits per task: up to 4 attachments, 10 MB per source document, 1.8 MB per image,
+  3.5 MB of images in total, and 20 MB of selected source files in total.
 
 ## Prerequisites
 
@@ -123,12 +125,12 @@ flowchart LR
 ## Quick Start
 
 ```bash
-npm install
-npm run dev
-npm run build
+pnpm install --frozen-lockfile
+pnpm run dev
+pnpm run build
 ```
 
-`npm run dev` starts the local Vinext dev server (the leader console) at
+`pnpm run dev` starts the local Vinext dev server (the leader console) at
 `http://localhost:3000`. LLM calls and share-link management are proxied through the
 local Node dev server so they work behind corporate proxies without extra setup.
 
@@ -142,6 +144,14 @@ Copy `.env.example` to `.env` and fill in real values. `.env` is git-ignored.
 | `OPENAI_BASE_URL`        | No       | Gateway base URL; defaults to `https://api.openai.com/v1`.                                                |
 | `OPENAI_MODEL`           | No       | Model id; defaults to `gpt-5.6-luna`.                                                                     |
 | `OPENAI_VISION_ENABLED`  | No       | Set to `false` to stop sending image attachments to the model (text-only models).                         |
+| `PUBLIC_BASE_URL`        | Local publishing | HTTPS origin of the deployed worker used by the local owner-console relay.                     |
+| `PUBLISH_TOKEN`          | Publishing | Server-to-server publishing secret; set both in the ignored local `.env` and as a Worker secret.       |
+| `RUN_SESSION_SECRET`     | Deployed worker | Random secret of at least 32 characters used to sign guest run sessions and hash rate-limit identities. |
+| `RUN_SESSION_SECRET_PREVIOUS` | Rotation only | Previous signing secret accepted temporarily while one-hour sessions drain. |
+| `RUN_SESSION_SECRET_ID`  | No | Non-secret identifier for the current signing key. |
+| `MAX_TEAM_RUNS_PER_MONTH` | No | Per-shared-team monthly run ceiling; defaults to 1000. |
+| `MAX_TEAM_OUTPUT_TOKENS_PER_DAY` | No | Per-shared-team daily reserved output-token ceiling; defaults to 200000. |
+| `REQUIRE_AUTHENTICATED_PUBLISHER` | No | Set to `1` to require ChatGPT/Cloudflare Access identity for publishing. |
 | `ARBOR_IDLE_MINUTES`     | No       | Idle timeout (minutes) for the one-click local launcher; defaults to 30.                                   |
 | `ADMIN_TOKEN`            | No       | Admin password for the "Share & Permissions" admin mode. **Do not put it in a distributed `.env`** — set it on Cloudflare with `npx wrangler secret put ADMIN_TOKEN`. |
 | `ARBOR_NETWORK_DRIVE`    | No       | Set to `1` when the project lives on a network drive (e.g. a shared drive or UNC path): switches Vite to polling and redirects cache/state to the local temp drive. Injected by the launcher when needed. |
@@ -151,31 +161,64 @@ Copy `.env.example` to `.env` and fill in real values. `.env` is git-ignored.
 
 | Script                     | Description                                                                  |
 | -------------------------- | ---------------------------------------------------------------------------- |
-| `npm run dev`              | Start the local development server.                                          |
-| `npm run local`            | Start the one-click-style local launcher on port 3000.                       |
-| `npm run build`            | Build with vinext and verify the output.                                     |
-| `npm run start`            | Serve a previously built output.                                             |
-| `npm test`                 | Build, then run the server-render smoke test.                                |
-| `npm run lint`             | ESLint over the project.                                                     |
-| `npm run db:generate`      | Generate Drizzle migrations after schema changes.                            |
-| `npm run db:migrate:cloudflare` | Apply migrations to the remote D1 database.                             |
-| `npm run deploy:cloudflare`     | Build and deploy the worker to Cloudflare.                              |
+| `pnpm run dev`              | Start the local development server.                                          |
+| `pnpm run local`            | Start the one-click-style local launcher on port 3000.                       |
+| `pnpm run build`            | Build with vinext and verify the output.                                     |
+| `pnpm run start`            | Serve a previously built output.                                             |
+| `pnpm test`                 | Build, then run the server-render smoke test.                                |
+| `pnpm run lint`             | ESLint over the project.                                                     |
+| `pnpm run db:generate`      | Generate Drizzle migrations after schema changes.                            |
+| `pnpm run db:migrate:cloudflare` | Apply migrations to the remote D1 database.                             |
+| `pnpm run deploy:cloudflare`     | Build and deploy the worker to Cloudflare.                              |
+| `pnpm run release:check`         | Run the complete public-release gate, including an isolated local D1.   |
 
 ## Deploy to the Owner's Cloudflare Account
 
 ```bash
-npx wrangler login
-npm run db:migrate:cloudflare
-npx wrangler secret bulk .env --config wrangler.deploy.jsonc
-npm run deploy:cloudflare
+cp wrangler.deploy.example.jsonc wrangler.deploy.jsonc
+# Fill in only the D1 database ID; do not put secrets in this file.
+pnpm exec wrangler login
+pnpm run build
+pnpm run db:migrate:cloudflare
+pnpm exec wrangler secret put OPENAI_API_KEY --config wrangler.deploy.jsonc
+pnpm exec wrangler secret put RUN_SESSION_SECRET --config wrangler.deploy.jsonc
+pnpm exec wrangler secret put PUBLISH_TOKEN --config wrangler.deploy.jsonc
+# Optional operations console:
+pnpm exec wrangler secret put ADMIN_TOKEN --config wrangler.deploy.jsonc
+pnpm run deploy:cloudflare
 ```
 
-The Cloudflare account, worker name, and D1 bindings live in `wrangler.deploy.jsonc`
-(not included in this repository because it contains account identifiers — create it
-from `wrangler.deploy.example.jsonc` or your own Cloudflare setup).
-`.env` is git-ignored; once uploaded it becomes the worker's encrypted secrets and is
-never bundled into browser code. The deployed public worker URL is defined once in
-`lib/public-worker.ts` (`PUBLIC_BASE_URL`).
+The Cloudflare account, worker name, and D1 bindings live in `wrangler.deploy.jsonc`,
+created from the committed example. Keep the real file private if its account identifiers
+are sensitive. Secrets are installed individually and are never bundled into browser code.
+
+For the local owner console, put `PUBLIC_BASE_URL` and the same `PUBLISH_TOKEN` in the
+ignored `.env`. `PUBLISH_TOKEN` authorizes the local server-to-server publishing relay;
+`RUN_SESSION_SECRET` signs short-lived guest run sessions and must be a different random
+value. Generate each with a cryptographically secure password manager or `openssl rand -hex 32`.
+For rotation, move the old signing value to `RUN_SESSION_SECRET_PREVIOUS`, install
+the new `RUN_SESSION_SECRET`, change `RUN_SESSION_SECRET_ID`, deploy, wait longer
+than the one-hour session TTL, then remove the previous secret.
+
+## Security and privacy boundary
+
+- Public users cannot call individual phases. `/api/access` issues a one-hour signed
+  run capability, and `/api/conversation` rechecks D1 then owns the entire phase sequence.
+- The server ignores client-supplied team definitions for public sessions and reloads the
+  immutable team configuration from D1.
+- Model calls have minute, monthly-run, daily-output-token limits, a short upstream
+  circuit breaker, and strict task/transcript/attachment/image-size caps.
+- Structured logs contain request id, route, outcome, duration and turn count only;
+  prompts, transcript text and attachment names/content are excluded.
+- Usage records retain event counts only. User task text and attachment contents are not
+  written to D1; migration `0002_lumpy_cerebro.sql` redacts old log content.
+- Task text, extracted attachment content and enabled images are transmitted to the
+  configured model provider to produce answers. Do not submit data that the provider's
+  policy or your organization's policy forbids; use an approved endpoint and retention policy.
+- Owner/access/admin bearer credentials use session storage only and disappear when the
+  browser tab closes. Never include credentials in issue reports, screenshots or URLs.
+- The local LLM relay permits only the configured gateway origin and the two expected API
+  paths. It is not a general-purpose HTTP proxy.
 
 ## One-click Local Launch
 

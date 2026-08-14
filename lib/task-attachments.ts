@@ -12,9 +12,10 @@ export type TaskAttachment = {
 };
 
 export const attachmentLimits = {
-  maxFiles: 6,
+  maxFiles: 4,
   maxFileBytes: 10 * 1024 * 1024,
-  maxImageBytes: 5 * 1024 * 1024,
+  maxImageBytes: 1_800_000,
+  maxTotalImageBytes: 3_500_000,
   maxTotalBytes: 20 * 1024 * 1024,
   maxTextCharacters: 40_000,
 };
