@@ -1,5 +1,12 @@
 name: CI
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 on:
   push:
     branches: [main]
@@ -29,8 +36,14 @@ jobs:
       - name: Lint
         run: pnpm lint
 
+      - name: Scan for committed secrets
+        run: pnpm release:audit && pnpm security:scan
+
       - name: Type check
         run: pnpm exec tsc --noEmit
 
       - name: Build and test
         run: pnpm test
+
+      - name: Apply migrations to local D1
+        run: pnpm test:d1
