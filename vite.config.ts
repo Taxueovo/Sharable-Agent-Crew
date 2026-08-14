@@ -2,7 +2,6 @@ import os from "node:os";
 import path from "node:path";
 import vinext from "vinext";
 import { defineConfig, type Plugin } from "vite";
-import hostingConfig from "./.openai/hosting.json";
 import { PUBLIC_BASE_URL } from "./lib/public-worker";
 import { sites } from "./build/sites-vite-plugin";
 
@@ -98,7 +97,11 @@ function shareApiProxyPlugin(): Plugin {
 const SITE_CREATOR_PLACEHOLDER_DATABASE_ID =
   "00000000-0000-4000-8000-000000000000";
 
-const { d1, r2 } = hostingConfig;
+// Local-development bindings for the Cloudflare plugin. The binding names must
+// match the worker's Env interface (DB, IMAGES). Production deployment reads
+// wrangler.deploy.jsonc, which is not part of this repository.
+const d1 = "DB";
+const r2 = "IMAGES";
 
 // macOS Seatbelt blocks FSEvents, so Codex previews need polling for HMR.
 const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
