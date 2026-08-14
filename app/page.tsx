@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { AttachmentPicker, useVisionCapability } from "@/app/attachment-picker";
 import { PUBLIC_BASE_URL } from "@/lib/public-worker";
 import { runTeamConversation, type AgentActivity, type RunStage, type TeamTurn } from "@/lib/team-orchestrator";
@@ -226,13 +226,13 @@ function ManagementModal({ links, close, onDelete }: { links: ManagedLink[]; clo
     ? adminTeams.map((team) => ({ teamId: team.teamId, teamName: team.teamName, sub: `Version ${new Date(team.createdAt).toLocaleString("en-US")} · ${team.usageCount} questions` }))
     : links.map((link) => ({ teamId: link.teamId, teamName: link.teamName, sub: `Version ${new Date(link.createdAt).toLocaleString("en-US")}` }));
 
-  async function manageCall(action: "list" | "update" | "delete", update?: { expiresAt: string | null; revoked: boolean }) {
+  const manageCall = useCallback(async (action: "list" | "update" | "delete", update?: { expiresAt: string | null; revoked: boolean }) => {
     const payload = isAdminView
       ? { teamId: selectedId, adminToken, action, ...update }
       : { teamId: selectedId, ownerToken: selectedOwn?.ownerToken ?? "", action, ...update };
     const response = await fetch("/share-api/api/manage", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(payload) });
     return await response.json() as ManagementData & { deleted?: boolean; error?: string };
-  }
+  }, [isAdminView, selectedId, adminToken, selectedOwn]);
 
   async function loadAdminList(token: string): Promise<AdminTeam[]> {
     const response = await fetch("/share-api/api/manage", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ adminToken: token, action: "listAll" }) });
@@ -241,7 +241,7 @@ function ManagementModal({ links, close, onDelete }: { links: ManagedLink[]; clo
     return body.teams;
   }
 
-  async function loadDetail() {
+  const loadDetail = useCallback(async () => {
     if (!selectedId) return;
     setLoading(true); setError("");
     try {
@@ -249,9 +249,9 @@ function ManagementModal({ links, close, onDelete }: { links: ManagedLink[]; clo
       if (!body.team) throw new Error(body.error ?? "Unable to read run logs");
       setData(body);
     } catch (error) { setError(error instanceof Error ? error.message : "Unable to read run logs"); } finally { setLoading(false); }
-  }
+  }, [selectedId, manageCall]);
 
-  useEffect(() => { setData(null); if (selectedId) void loadDetail(); }, [selectedId, adminMode]);
+  useEffect(() => { setData(null); if (selectedId) void loadDetail(); }, [selectedId, loadDetail]);
 
   async function enterAdmin() {
     const token = adminInput.trim();
