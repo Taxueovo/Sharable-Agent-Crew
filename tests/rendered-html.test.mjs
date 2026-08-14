@@ -16,13 +16,13 @@ async function render() {
   );
 }
 
-test("server-renders the Arbor team builder", async () => {
+test("server-renders the SharableAgentCrew team builder", async () => {
   const response = await render();
   assert.equal(response.status, 200);
   assert.match(response.headers.get("content-type") ?? "", /^text\/html\b/i);
 
   const html = await response.text();
-  assert.match(html, /<title>Arbor · Multi-Agent Teams<\/title>/i);
+  assert.match(html, /<title>SharableAgentCrew · Multi-Agent Teams<\/title>/i);
   assert.match(html, /Start your team from Planner–Worker/);
   assert.match(html, /Configure members/);
   assert.doesNotMatch(html, /codex-preview|Your site is taking shape/);

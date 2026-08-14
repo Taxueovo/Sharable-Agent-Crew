@@ -1,4 +1,4 @@
-# Contributing to Arbor Agent Team
+# Contributing to SharableAgentCrew Agent Team
 
 Thank you for contributing! This project is a Next.js multi-agent team collaboration
 platform deployed on Cloudflare Workers.

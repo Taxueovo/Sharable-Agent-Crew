@@ -3,7 +3,7 @@ import ActivityHeartbeat from "./activity-heartbeat";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Arbor · Multi-Agent Teams",
+  title: "SharableAgentCrew · Multi-Agent Teams",
   description: "Configure, publish, and run traceable multi-agent teams.",
   icons: {
     icon: "/favicon.svg",

@@ -42,7 +42,7 @@ function cancelClose() {
 
 function scheduleClose(reason) {
   if (closingTimer || shuttingDown) return;
-  closingTimer = setTimeout(() => shutdown(`${reason} — Arbor has shut down automatically.`, 0), browserCloseGraceMs);
+  closingTimer = setTimeout(() => shutdown(`${reason} — SharableAgentCrew has shut down automatically.`, 0), browserCloseGraceMs);
 }
 
 function canListen(port) {
@@ -159,17 +159,17 @@ function shutdown(reason, exitCode = 0) {
 
 proxy.once("error", (error) => shutdown(`Failed to start the local port: ${error.message}`, 1));
 proxy.listen(publicPort, () => {
-  console.log(`Arbor local address: http://localhost:${publicPort}`);
+  console.log(`SharableAgentCrew local address: http://localhost:${publicPort}`);
   console.log(`It will shut down and free the port about 10 seconds after the browser closes, or after ${idleMinutes} minutes without activity.`);
 });
 
 const idleTimer = setInterval(() => {
-  if (Date.now() - lastActivityAt >= idleMilliseconds) shutdown(`No activity for ${idleMinutes} minutes — Arbor has shut down automatically.`);
+  if (Date.now() - lastActivityAt >= idleMilliseconds) shutdown(`No activity for ${idleMinutes} minutes — SharableAgentCrew has shut down automatically.`);
 }, Math.min(10_000, Math.max(1_000, idleMilliseconds / 4)));
 idleTimer.unref();
 
 child.once("exit", (code) => {
-  if (!shuttingDown) shutdown("Arbor server has stopped.", code ?? 0);
+  if (!shuttingDown) shutdown("SharableAgentCrew server has stopped.", code ?? 0);
 });
-process.once("SIGINT", () => shutdown("Shutting down Arbor..."));
-process.once("SIGTERM", () => shutdown("Shutting down Arbor..."));
+process.once("SIGINT", () => shutdown("Shutting down SharableAgentCrew..."));
+process.once("SIGTERM", () => shutdown("Shutting down SharableAgentCrew..."));

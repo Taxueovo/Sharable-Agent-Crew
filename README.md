@@ -1,15 +1,18 @@
-# Arbor Agent Team
+# SharableAgentCrew
 
-[![CI](https://github.com/Taxueovo/Arbor-Agent-Team/actions/workflows/ci.yml/badge.svg)](https://github.com/Taxueovo/Arbor-Agent-Team/actions/workflows/ci.yml)
+[![CI](https://github.com/Taxueovo/Sharable-Agent-Crew/actions/workflows/ci.yml/badge.svg)](https://github.com/Taxueovo/Sharable-Agent-Crew/actions/workflows/ci.yml)
 [![TypeScript](https://img.shields.io/badge/TypeScript-blue)](https://www.typescriptlang.org/)
 [![React](https://img.shields.io/badge/React-19-black)](https://react.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Maintainer](https://img.shields.io/badge/maintainer-Taxueovo-blue)](https://github.com/Taxueovo)
 
-A multi-agent application that lets you build a custom Planner–Worker team, run it
-through an explicit, visible collaboration conversation, share read-only versions of
-it, and keep a record of every run. The app runs on Cloudflare Workers with D1 as its
-persistent store and uses a Vinext (React + Vite) frontend.
+Shareable AI agent teams you can watch work.
+
+Build a Planner + Workers team with custom responsibilities, run it through a visible
+collaboration conversation, and publish read-only versions shared by link + access
+code. Recipients can run the team but never change it. Run history is kept for
+continuation. The app runs on Cloudflare Workers with D1 as its persistent store and
+uses a Vinext (React + Vite) frontend.
 
 ## Table of Contents
 
@@ -180,7 +183,7 @@ never bundled into browser code. The deployed public worker URL is defined once 
   folder.
 - **Windows**: double-click the included `.bat` launcher. The first launch downloads a
   portable Node.js runtime inside the project (`.arbor-runtime/`), installs
-  Windows-native dependencies, reads the included `.env`, starts Arbor, and opens the
+  Windows-native dependencies, reads the included `.env`, starts SharableAgentCrew, and opens the
   browser. No system-wide Node.js installation and no administrator setup required.
 - The launcher automatically stops the local server and frees the port after 30 minutes
   without browser interaction (or about 10 seconds after the browser closes, leaving a
