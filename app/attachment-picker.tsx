@@ -19,6 +19,7 @@ function kindOf(file: File): AttachmentKind | null {
 }
 
 function clipped(text: string) {
+  // eslint-disable-next-line no-control-regex -- strip NUL bytes from pasted content
   const normalized = text.replace(/\u0000/g, "").trim();
   if (normalized.length <= attachmentLimits.maxTextCharacters) return { text: normalized, truncated: false };
   return { text: normalized.slice(0, attachmentLimits.maxTextCharacters), truncated: true };

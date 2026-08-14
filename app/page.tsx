@@ -67,7 +67,7 @@ export default function Home() {
 
   useEffect(() => {
     const savedUserName = window.localStorage.getItem("arbor-user-name");
-    if (savedUserName?.trim()) setUserName(savedUserName);
+    if (savedUserName?.trim()) queueMicrotask(() => setUserName(savedUserName));
     try {
       const links = JSON.parse(window.localStorage.getItem("arbor-managed-links") ?? "[]") as ManagedLink[];
       if (Array.isArray(links)) { setManagedLinks(links); setShareInfo(links[0] ?? null); }
@@ -242,6 +242,7 @@ function ManagementModal({ links, close, onDelete }: { links: ManagedLink[]; clo
   }
 
   async function loadDetail() {
+    setData(null);
     if (!selectedId) return;
     setLoading(true); setError("");
     try {
@@ -251,7 +252,7 @@ function ManagementModal({ links, close, onDelete }: { links: ManagedLink[]; clo
     } catch (error) { setError(error instanceof Error ? error.message : "Unable to read run logs"); } finally { setLoading(false); }
   }
 
-  useEffect(() => { setData(null); if (selectedId) void loadDetail(); }, [selectedId, adminMode]);
+  useEffect(() => { if (selectedId) void loadDetail(); }, [selectedId, adminMode]);
 
   async function enterAdmin() {
     const token = adminInput.trim();
