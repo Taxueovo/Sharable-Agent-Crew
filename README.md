@@ -1,5 +1,10 @@
 # Arbor Agent Team
 
+[![CI](https://github.com/Taxueovo/Arbor-Agent-Team/actions/workflows/ci.yml/badge.svg)](https://github.com/Taxueovo/Arbor-Agent-Team/actions/workflows/ci.yml)
+[![TypeScript](https://img.shields.io/badge/TypeScript-blue)](https://www.typescriptlang.org/)
+[![React](https://img.shields.io/badge/React-19-black)](https://react.dev/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 A multi-agent application that lets you build a custom Planner–Worker team, run it
 through an explicit, visible collaboration conversation, share read-only versions of
 it, and keep a record of every run. The app runs on Cloudflare Workers with D1 as its
