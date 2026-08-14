@@ -22,6 +22,10 @@ const eslintConfig = defineConfig([
   jsxA11y.flatConfigs.recommended,
   {
     rules: {
+      // This app restores persisted state (user name, team, managed links) and
+      // clears loading state inside mount/effect bodies; the rule would force
+      // microtask indirection for no benefit here.
+      "react-hooks/set-state-in-effect": "off",
       // JSX text nodes are escaped by React at render time; plain quotes in
       // English UI copy (it's, don't, ...) are not an injection vector.
       "react/no-unescaped-entities": "off",

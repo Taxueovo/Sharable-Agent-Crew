@@ -67,10 +67,10 @@ export default function Home() {
 
   useEffect(() => {
     const savedUserName = window.localStorage.getItem("arbor-user-name");
-    if (savedUserName?.trim()) queueMicrotask(() => setUserName(savedUserName));
+    if (savedUserName?.trim()) setUserName(savedUserName);
     try {
       const links = JSON.parse(window.localStorage.getItem("arbor-managed-links") ?? "[]") as ManagedLink[];
-      if (Array.isArray(links)) queueMicrotask(() => { setManagedLinks(links); setShareInfo(links[0] ?? null); });
+      if (Array.isArray(links)) { setManagedLinks(links); setShareInfo(links[0] ?? null); }
     } catch { window.localStorage.removeItem("arbor-managed-links"); }
     const saved = window.localStorage.getItem("arbor-team");
     if (!saved) return;
@@ -242,8 +242,8 @@ function ManagementModal({ links, close, onDelete }: { links: ManagedLink[]; clo
   }
 
   async function loadDetail() {
-    queueMicrotask(() => { setData(null); setLoading(true); setError(""); });
     if (!selectedId) return;
+    setLoading(true); setError("");
     try {
       const body = await manageCall("list");
       if (!body.team) throw new Error(body.error ?? "Unable to read run logs");
@@ -251,7 +251,7 @@ function ManagementModal({ links, close, onDelete }: { links: ManagedLink[]; clo
     } catch (error) { setError(error instanceof Error ? error.message : "Unable to read run logs"); } finally { setLoading(false); }
   }
 
-  useEffect(() => { if (selectedId) void loadDetail(); }, [selectedId, adminMode]);
+  useEffect(() => { setData(null); if (selectedId) void loadDetail(); }, [selectedId, adminMode]);
 
   async function enterAdmin() {
     const token = adminInput.trim();
