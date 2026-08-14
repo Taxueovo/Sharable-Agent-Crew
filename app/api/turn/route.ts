@@ -126,7 +126,7 @@ export async function POST(request: Request) {
     let remainingTextBudget = 80_000;
     const attachments = (payload.attachments ?? [])
       .slice(0, 6)
-      .map((entry) => {
+      .map((entry): Attachment => {
         const text = typeof entry.text === "string" ? entry.text.slice(0, Math.max(0, Math.min(40_000, remainingTextBudget))) : undefined;
         remainingTextBudget -= text?.length ?? 0;
         return {
