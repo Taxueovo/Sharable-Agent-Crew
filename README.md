@@ -1,18 +1,43 @@
-# SharableAgentCrew
+<p align="center">
+  <img src=".github/assets/readme-hero.svg" width="100%" alt="Sharable Agent Crew — build the team, watch the work, share the result" />
+</p>
 
-[![CI](https://github.com/Taxueovo/Sharable-Agent-Crew/actions/workflows/ci.yml/badge.svg)](https://github.com/Taxueovo/Sharable-Agent-Crew/actions/workflows/ci.yml)
-[![TypeScript](https://img.shields.io/badge/TypeScript-blue)](https://www.typescriptlang.org/)
-[![React](https://img.shields.io/badge/React-19-black)](https://react.dev/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Maintainer](https://img.shields.io/badge/maintainer-Taxueovo-blue)](https://github.com/Taxueovo)
+<h1 align="center">Sharable Agent Crew</h1>
 
-Shareable AI agent teams you can watch work.
+<p align="center">
+  <strong>Build a Planner + Workers team, watch every collaboration phase, and share an immutable runnable version.</strong>
+</p>
 
-Build a Planner + Workers team with custom responsibilities, run it through a visible
-collaboration conversation, and publish read-only versions shared by link + access
-code. Recipients can run the team but never change it. Run history is kept for
-continuation. The app runs on Cloudflare Workers with D1 as its persistent store and
-uses a Vinext (React + Vite) frontend.
+<p align="center">
+  <a href="https://github.com/Taxueovo/Sharable-Agent-Crew/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Taxueovo/Sharable-Agent-Crew/ci.yml?branch=main&amp;style=flat-square&amp;label=build" alt="Build status" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&amp;logo=typescript&amp;logoColor=white" alt="TypeScript" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React_19-20232A?style=flat-square&amp;logo=react&amp;logoColor=61DAFB" alt="React 19" /></a>
+  <a href="https://workers.cloudflare.com/"><img src="https://img.shields.io/badge/Cloudflare_Workers-F38020?style=flat-square&amp;logo=cloudflare&amp;logoColor=white" alt="Cloudflare Workers" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-6657DB?style=flat-square" alt="MIT License" /></a>
+</p>
+
+<p align="center">
+  <a href="#quick-start">Quick start</a>
+  · <a href="#features">Features</a>
+  · <a href="#architecture">Architecture</a>
+  · <a href=".github/SECURITY.md">Security</a>
+  · <a href="CONTRIBUTING.md">Contributing</a>
+</p>
+
+---
+
+Sharable Agent Crew turns a multi-agent run into something you can understand and
+share. Define one Planner and any number of Workers, follow the visible flow from
+planning to final review, intervene when the team needs a correction, then publish a
+read-only version by link and access code. Run history stays available for continuation.
+
+| Assemble | Observe | Share |
+| :--- | :--- | :--- |
+| Give every agent a clear responsibility, working style, and tool set. | Follow **Planning → Working → Review → Final summary** and replan at any time. | Publish immutable versions that recipients can run but never silently modify. |
+
+> **Built for controlled collaboration.** The conversation is orchestrated server-side,
+> shared configurations are reloaded from D1, and task content is not written into the
+> published team definition.
 
 ## Table of Contents
 

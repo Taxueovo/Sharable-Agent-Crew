@@ -1,0 +1,88 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="360" viewBox="0 0 1200 360" role="img" aria-labelledby="title desc">
+  <title id="title">Sharable Agent Crew</title>
+  <desc id="desc">A visual map of a planner coordinating three AI workers through a visible collaboration flow.</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fbfaf6"/>
+      <stop offset="0.55" stop-color="#f5f3ff"/>
+      <stop offset="1" stop-color="#eef8f3"/>
+    </linearGradient>
+    <linearGradient id="button" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#776de0"/>
+      <stop offset="1" stop-color="#5148aa"/>
+    </linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="170%">
+      <feDropShadow dx="0" dy="12" stdDeviation="15" flood-color="#272947" flood-opacity="0.12"/>
+    </filter>
+    <pattern id="dots" width="18" height="18" patternUnits="userSpaceOnUse">
+      <circle cx="1.5" cy="1.5" r="1.2" fill="#c9c5df" opacity="0.45"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="360" rx="28" fill="url(#background)"/>
+  <circle cx="1070" cy="-35" r="180" fill="#dcd8ff" opacity="0.4"/>
+  <circle cx="1040" cy="348" r="150" fill="#d9f4e8" opacity="0.65"/>
+  <path d="M0 310C170 250 250 372 420 324C585 278 642 343 760 330V360H0Z" fill="#fff" opacity="0.52"/>
+
+  <g transform="translate(72 65)">
+    <g transform="translate(0 3)">
+      <rect width="52" height="52" rx="16" fill="#272947"/>
+      <rect x="10" y="10" width="14" height="14" rx="4" fill="#bcb6ff"/>
+      <rect x="28" y="10" width="14" height="14" rx="4" fill="#756bd7"/>
+      <rect x="10" y="28" width="14" height="14" rx="4" fill="#756bd7"/>
+      <rect x="28" y="28" width="14" height="14" rx="4" fill="#d9f4e8"/>
+    </g>
+    <text x="0" y="102" fill="#272947" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="46" font-weight="750" letter-spacing="-1.8">Sharable Agent Crew</text>
+    <text x="0" y="142" fill="#5f6178" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="20">Build the team. Watch the work. Share the result.</text>
+    <g transform="translate(0 178)">
+      <rect width="140" height="40" rx="20" fill="url(#button)"/>
+      <circle cx="22" cy="20" r="5" fill="#d9f4e8"/>
+      <text x="38" y="26" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="650">Planner-led</text>
+      <rect x="152" width="158" height="40" rx="20" fill="#fff" stroke="#dedbea"/>
+      <path d="M173 15h14v10h-14zM176 12h8v3" fill="none" stroke="#645bc0" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="197" y="26" fill="#4f5065" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600">Visible workflow</text>
+      <rect x="322" width="154" height="40" rx="20" fill="#fff" stroke="#dedbea"/>
+      <path d="M343 19a6 6 0 0 1 11-3M354 21a6 6 0 0 1-11 3" fill="none" stroke="#4c9a73" stroke-width="1.8" stroke-linecap="round"/>
+      <text x="367" y="26" fill="#4f5065" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="14" font-weight="600">Safe sharing</text>
+    </g>
+  </g>
+
+  <g transform="translate(760 42)" filter="url(#shadow)">
+    <rect width="370" height="274" rx="22" fill="#fff" stroke="#e0deea"/>
+    <rect x="18" y="18" width="334" height="238" rx="15" fill="url(#dots)" stroke="#eceaf2" stroke-dasharray="5 6"/>
+    <text x="35" y="48" fill="#9997aa" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="11" font-weight="700" letter-spacing="1.5">LIVE COLLABORATION MAP</text>
+
+    <path d="M185 113V146M185 146H82V180M185 146V180M185 146H288V180" fill="none" stroke="#b9b4da" stroke-width="2"/>
+
+    <g transform="translate(116 66)">
+      <rect width="138" height="58" rx="14" fill="#fff" stroke="#7a70d5" stroke-width="2"/>
+      <rect x="12" y="12" width="34" height="34" rx="11" fill="#e5e1ff"/>
+      <text x="29" y="34" text-anchor="middle" fill="#5b50bb" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="13" font-weight="750">P</text>
+      <text x="56" y="27" fill="#2f3048" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="12" font-weight="750">Planner</text>
+      <text x="56" y="43" fill="#828397" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif" font-size="10">orchestrating</text>
+      <circle cx="122" cy="15" r="4" fill="#51c18a"/>
+    </g>
+
+    <g transform="translate(35 180)">
+      <rect width="94" height="52" rx="13" fill="#fff" stroke="#deddea"/>
+      <rect x="10" y="10" width="30" height="30" rx="10" fill="#d9f4e8"/>
+      <text x="25" y="30" text-anchor="middle" fill="#34715d" font-family="sans-serif" font-size="11" font-weight="700">W1</text>
+      <text x="48" y="24" fill="#3a3b51" font-family="sans-serif" font-size="10" font-weight="700">Research</text>
+      <text x="48" y="38" fill="#9091a3" font-family="sans-serif" font-size="9">working</text>
+    </g>
+    <g transform="translate(138 180)">
+      <rect width="94" height="52" rx="13" fill="#fff" stroke="#deddea"/>
+      <rect x="10" y="10" width="30" height="30" rx="10" fill="#ffe0ba"/>
+      <text x="25" y="30" text-anchor="middle" fill="#a3541e" font-family="sans-serif" font-size="11" font-weight="700">W2</text>
+      <text x="48" y="24" fill="#3a3b51" font-family="sans-serif" font-size="10" font-weight="700">Build</text>
+      <text x="48" y="38" fill="#9091a3" font-family="sans-serif" font-size="9">reviewing</text>
+    </g>
+    <g transform="translate(241 180)">
+      <rect width="94" height="52" rx="13" fill="#fff" stroke="#deddea"/>
+      <rect x="10" y="10" width="30" height="30" rx="10" fill="#dceafe"/>
+      <text x="25" y="30" text-anchor="middle" fill="#41679d" font-family="sans-serif" font-size="11" font-weight="700">W3</text>
+      <text x="48" y="24" fill="#3a3b51" font-family="sans-serif" font-size="10" font-weight="700">Verify</text>
+      <text x="48" y="38" fill="#9091a3" font-family="sans-serif" font-size="9">ready</text>
+    </g>
+  </g>
+</svg>
